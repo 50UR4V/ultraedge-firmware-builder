@@ -178,7 +178,7 @@ jobs:
           git config --global --add safe.directory "$GITHUB_WORKSPACE/src"
           args=(--src src --out out --lang "$LANGUAGE" --label "$LABEL" --jobs "$(nproc)")
           [ "$UI" != default ] && args+=(--ui "$UI")
-          set -f; for o in $OPTIONS; do args+=(--opt "$o"); done   # ue-build.sh validates every option
+          set -f; for o in $OPTIONS; do args+=(--opt "$o"); done; set +f   # no globbing on the options; ue-build.sh validates each
           recipe/tools/ultraedge/ue-build.sh "$RADIO" "${args[@]}"
           {
             echo "### UltraEdge firmware for \`$RADIO\`"
