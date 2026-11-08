@@ -1,0 +1,193 @@
+# SPDX-License-Identifier: GPL-2.0-only
+# Build UltraEdge firmware for one radio from a form (Actions ▸ Build UltraEdge firmware ▸ Run workflow). ADR-0049.
+# GENERATED from the UltraEdge monorepo (firmware/selfbuild/build-ultraedge.yml.in by stage.sh builder) — edit there.
+#
+# The source is always the PUBLISHED release tag on 50UR4V/edgetx-ue (never your fork's branches), so what you get is the
+# released UltraEdge code built for your radio, labelled "<version>-selfbuild" on the radio's Version page.
+# Public repositories run GitHub-hosted Actions for free; one build takes about 5-15 minutes.
+# This is an UltraEdge recipe, not an EdgeTX build service; EdgeTX's own builds are at github.com/EdgeTX/edgetx.
+name: Build UltraEdge firmware
+
+on:
+  workflow_dispatch:
+    inputs:
+      ultraedge:
+        description: "UltraEdge version (each one is built on a fixed EdgeTX version)"
+        type: choice
+        options:
+          - "1.2.1 production · EdgeTX 3.0-dev (main, 2026-08-29)"
+      radio:
+        description: "Radio. (community-unverified) = nobody has checked it on the real radio yet (EdgeTX 3.x line; the run says the status for the version you pick): bench-test before flying"
+        type: choice
+        options:
+          - "pocket · RadioMaster Pocket"
+          - "zorro · RadioMaster Zorro"
+          - "qx7 · FrSky Taranis Q X7 / Q X7S"
+          - "tx16s · RadioMaster TX16S / TX16S MKII"
+          - "x7access · FrSky Taranis Q X7 ACCESS (community-unverified)"
+          - "boxer · RadioMaster Boxer (community-unverified)"
+          - "gx12 · RadioMaster GX12 (community-unverified)"
+          - "mt12 · RadioMaster MT12 (community-unverified)"
+          - "tx12 · RadioMaster TX12 (community-unverified)"
+          - "tx12mk2 · RadioMaster TX12 MKII (community-unverified)"
+          - "t8 · RadioMaster T8 Pro / T8 Lite (community-unverified)"
+          - "t12 · Jumper T12 / T12 Pro (community-unverified)"
+          - "t12max · Jumper T12 MAX (community-unverified)"
+          - "t14 · Jumper T14 (community-unverified)"
+          - "t20 · Jumper T20 (community-unverified)"
+          - "t20v2 · Jumper T20 V2 (community-unverified)"
+          - "tlite · Jumper T-Lite (v1) (community-unverified)"
+          - "tpro · Jumper T-Pro (v1) (community-unverified)"
+          - "tprov2 · Jumper T-Pro V2 (community-unverified)"
+          - "tpros · Jumper T-Pro S (community-unverified)"
+          - "bumblebee · Jumper Bumblebee (community-unverified)"
+          - "lr3pro · BETAFPV LiteRadio 3 Pro (community-unverified)"
+          - "commando8 · iFlight Commando 8 (community-unverified)"
+          - "v14 · HelloRadioSky V14 (community-unverified)"
+          - "v14lcd · HelloRadioSky V14 LCD (community-unverified)"
+          - "x9lite · FrSky Taranis X9 Lite (community-unverified)"
+          - "x9lites · FrSky Taranis X9 Lite S (community-unverified)"
+          - "xlite · FrSky Taranis X-Lite (community-unverified)"
+          - "xlites · FrSky Taranis X-Lite S / Pro (community-unverified)"
+          - "x9d · FrSky Taranis X9D (community-unverified)"
+          - "x9dp · FrSky Taranis X9D Plus (community-unverified)"
+          - "x9dp2019 · FrSky Taranis X9D Plus 2019 (community-unverified)"
+          - "x9e · FrSky Taranis X9E (community-unverified)"
+          - "x10 · FrSky Horus X10 / X10S (community-unverified)"
+          - "x10express · FrSky Horus X10 / X10S Express (community-unverified)"
+          - "x12s · FrSky Horus X12S (community-unverified)"
+          - "t15 · Jumper T15 (community-unverified)"
+          - "t16 · Jumper T16 (community-unverified)"
+          - "t18 · Jumper T18 (community-unverified)"
+          - "f16 · Fatfish F16 (community-unverified)"
+          - "v16 · HelloRadioSky V16 (community-unverified)"
+          - "nv14 · FlySky Nirvana NV14 (community-unverified)"
+          - "el18 · FlySky Elysium EL18 (community-unverified)"
+          - "pl18 · FlySky Paladin PL18 (community-unverified)"
+          - "pl18ev · FlySky Paladin PL18EV (community-unverified)"
+          - "pl18u · FlySky Paladin PL18U (community-unverified)"
+          - "nb4p · FlySky Noble NB4+ (community-unverified)"
+          - "tx15 · RadioMaster TX15 (community-unverified)"
+          - "gx15 · RadioMaster GX15 (community-unverified)"
+          - "tx16smk3 · RadioMaster TX16S MK3 (community-unverified)"
+          - "t15pro · Jumper T15 Pro (community-unverified)"
+          - "t22 · Jumper T22 (community-unverified)"
+          - "v12 · HelloRadioSky V12 (community-unverified)"
+          - "st16 · FlySky ST16 (community-unverified)"
+          - "pa01 · FlySky PA01 (community-unverified)"
+          - "c14 · iFlight Commando 14 (community-unverified)"
+      ui:
+        description: "Radio menus: default = companion on black-and-white radios (settings in the app), full on colour"
+        type: choice
+        default: default
+        options: [default, FULL, COMPANION]
+      language:
+        description: "Radio language (EdgeTX TRANSLATIONS code: EN, DE, FR, ES, IT, CZ, …)"
+        type: string
+        default: EN
+      label:
+        description: "Version label shown on the radio after the version number (max 12 characters)"
+        type: string
+        default: selfbuild
+      options:
+        description: "Advanced: extra EdgeTX build options, space-separated (e.g. -DBLUETOOTH=YES). May not fit 512 KB radios."
+        type: string
+        default: ""
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Check the choices
+    runs-on: ubuntu-latest
+    outputs:
+      repo: ${{ steps.pick.outputs.repo }}
+      tag: ${{ steps.pick.outputs.tag }}
+      radio: ${{ steps.pick.outputs.radio }}
+      edgetx: ${{ steps.pick.outputs.edgetx }}
+      image: ${{ steps.pick.outputs.image }}
+    steps:
+      - name: Get the build recipe
+        uses: actions/checkout@v4
+        with:
+          path: recipe
+          sparse-checkout: tools/ultraedge
+
+      - name: Check the choices
+        id: pick
+        env:
+          UE: ${{ inputs.ultraedge }}
+          RADIO: ${{ inputs.radio }}
+        run: |
+          python3 - <<'PY'
+          import json, os
+          d = json.load(open("recipe/tools/ultraedge/compat.json"))
+          ue = os.environ["UE"].split()[0]; radio = os.environ["RADIO"].split()[0]
+          row = next(v for v in d["versions"] if v["id"] == ue)
+          if (row["radios"] != "*" and radio not in row["radios"]) or radio in row.get("exclude", {}):
+              why = row.get("exclude", {}).get(radio, "not in this version's radio list")
+              raise SystemExit(f"::error::UltraEdge {ue} ({row['channel']}) can't build {radio}: {why}. Try the beta.")
+          if radio in row.get("warn", {}):
+              print(f"::warning::UltraEdge {ue} on {radio}: {row['warn'][radio]}")
+          keys = {l.split("|")[0]: l.rstrip("\n").split("|") for l in open("recipe/tools/ultraedge/targets.tsv") if l.strip() and not l.startswith("#")}
+          t = keys[radio]
+          verified = (ue in t[11].split()) if row.get("verified_section") else t[10] == "verified"
+          if not verified:
+              print(f"::warning::{radio} is community-unverified on UltraEdge {ue}: nobody has run the checklist on this radio with this version yet. Bench-test before flying, and please report the result.")
+          if row.get("frozen"):
+              print(f"::notice::UltraEdge {ue}: {row['frozen']}")
+          image = row.get("image", "ghcr.io/edgetx/edgetx-dev:latest")
+          with open(os.environ["GITHUB_OUTPUT"], "a") as o:
+              o.write(f"repo={d['repo']}\ntag={row['tag']}\nradio={radio}\nedgetx={row['edgetx']['label']}\nimage={image}\n")
+          PY
+
+  build:
+    name: "${{ inputs.radio }} · UltraEdge ${{ inputs.ultraedge }}"
+    needs: check
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    container:
+      image: ${{ needs.check.outputs.image }}   # EdgeTX's own build image for this version's EdgeTX base
+    steps:
+      - name: Get the build recipe
+        uses: actions/checkout@v4
+        with:
+          path: recipe
+          sparse-checkout: tools/ultraedge
+
+      - name: Get the UltraEdge firmware source (${{ needs.check.outputs.tag }})
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ needs.check.outputs.repo }}
+          ref: ${{ needs.check.outputs.tag }}
+          path: src
+          submodules: recursive
+
+      - name: Build
+        env:
+          RADIO: ${{ needs.check.outputs.radio }}
+          UI: ${{ inputs.ui }}
+          LANGUAGE: ${{ inputs.language }}
+          LABEL: ${{ inputs.label }}
+          OPTIONS: ${{ inputs.options }}
+          UE_SOURCE: "https://github.com/${{ needs.check.outputs.repo }} @ ${{ needs.check.outputs.tag }}"
+          UE_BUILD_URL: "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE/src"
+          args=(--src src --out out --lang "$LANGUAGE" --label "$LABEL" --jobs "$(nproc)")
+          [ "$UI" != default ] && args+=(--ui "$UI")
+          set -f; for o in $OPTIONS; do args+=(--opt "$o"); done   # ue-build.sh validates every option
+          recipe/tools/ultraedge/ue-build.sh "$RADIO" "${args[@]}"
+          {
+            echo "### UltraEdge firmware for \`$RADIO\`"
+            echo "EdgeTX base: ${{ needs.check.outputs.edgetx }}. Download it under **Artifacts** below, then follow FLASHING.md."
+            echo '```'; cat out/*.txt; echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload the firmware
+        uses: actions/upload-artifact@v4
+        with:
+          name: UltraEdge-fw-${{ needs.check.outputs.radio }}
+          path: out/
+          retention-days: 30
