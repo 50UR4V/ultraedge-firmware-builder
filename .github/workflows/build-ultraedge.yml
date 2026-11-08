@@ -109,7 +109,7 @@ jobs:
       image: ${{ steps.pick.outputs.image }}
     steps:
       - name: Get the build recipe
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           path: recipe
           sparse-checkout: tools/ultraedge
@@ -151,13 +151,13 @@ jobs:
       image: ${{ needs.check.outputs.image }}   # EdgeTX's own build image for this version's EdgeTX base
     steps:
       - name: Get the build recipe
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           path: recipe
           sparse-checkout: tools/ultraedge
 
       - name: Get the UltraEdge firmware source (${{ needs.check.outputs.tag }})
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: ${{ needs.check.outputs.repo }}
           ref: ${{ needs.check.outputs.tag }}
@@ -190,5 +190,17 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: UltraEdge-fw-${{ needs.check.outputs.radio }}
-          path: out/
+          path: |
+            out/*.bin
+            out/*.uf2
+            out/*.txt
+          retention-days: 30
+
+      - name: Upload the build log (failed runs only)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: UltraEdge-build-log-${{ needs.check.outputs.radio }}
+          path: out/*.log
+          if-no-files-found: ignore
           retention-days: 30

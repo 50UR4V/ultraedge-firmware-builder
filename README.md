@@ -37,7 +37,7 @@ You need a free GitHub account.
    **Artifacts**. The zip holds the firmware (`.bin`, or `.uf2` for H750 radios) and a `.txt` describing it.
 5. Flash it as described in [FLASHING.md](https://github.com/50UR4V/edgetx-ue/blob/ultraedge/FLASHING.md).
 
-If the run turns red, its summary says why. "Doesn't fit" means that radio has too little flash for this version and
+If the run turns red, its summary says why, and the full build log is under **Artifacts**. "Doesn't fit" means that radio has too little flash for this version and
 options: the companion menus or fewer advanced options.
 
 ## Community-unverified radios
