@@ -165,6 +165,7 @@ jobs:
           submodules: recursive
 
       - name: Build
+        shell: bash   # the container's default is sh; this step uses bash arrays
         env:
           RADIO: ${{ needs.check.outputs.radio }}
           UI: ${{ inputs.ui }}
